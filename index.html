@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyHomeRadius — See Homes Before They Hit the Market</title>
+<meta name="description" content="Draw a radius anywhere in the Bay Area and see for-sale homes plus off-market properties you won't find on the open market.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="logo" href="#top">
+      <svg class="logo-mark" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="15" cy="15" r="13.5" stroke="currentColor" stroke-width="1.4"/>
+        <circle cx="15" cy="15" r="8" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 3"/>
+        <circle cx="15" cy="15" r="2" fill="currentColor"/>
+      </svg>
+      <span>MyHomeRadius</span>
+    </a>
+    <nav class="header-nav">
+      <a href="#how">How it works</a>
+      <a href="#listings">Listings</a>
+      <a href="#radius-form" class="btn btn-primary btn-small">Set your radius</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Bay Area home search, drawn your way</p>
+        <h1>See homes before<br>they hit the market.</h1>
+        <p class="hero-sub">Draw a radius anywhere from San Francisco to Gilroy. We'll show you what's publicly for sale inside it — and quietly go find you the homes that aren't listed anywhere yet.</p>
+        <div class="hero-actions">
+          <a href="#map-card" class="btn btn-primary">Try the map</a>
+          <a href="#radius-form" class="btn btn-ghost">Get matched with a home</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong>5</strong><span>counties covered</span></div>
+          <div><strong>On + off</strong><span>market, one search</span></div>
+          <div><strong>Free</strong><span>no obligation</span></div>
+        </div>
+      </div>
+
+      <div class="hero-map-frame" id="map-card">
+        <div class="map-topo" aria-hidden="true"></div>
+        <div class="map-panel">
+          <div class="map-panel-head">
+            <div class="map-controls">
+              <label for="radiusRange">Search radius</label>
+              <input type="range" id="radiusRange" min="1" max="15" step="1" value="4">
+              <span id="radiusValue">4 mi</span>
+            </div>
+            <p class="map-hint">Click anywhere on the map to drop your center point.</p>
+          </div>
+          <div id="map"></div>
+          <div class="map-legend">
+            <span><i class="dot dot-onmarket"></i> For sale (public)</span>
+            <span><i class="dot dot-offmarket"></i> Off-market — request info</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="wrap">
+      <h2>One search, two markets</h2>
+      <div class="how-steps">
+        <div class="how-step">
+          <span class="how-num">1</span>
+          <h3>Draw your radius</h3>
+          <p>Drop a pin anywhere in the Bay Area and set how far out you want to look — a neighborhood, a school district, or a whole city.</p>
+        </div>
+        <div class="how-step">
+          <span class="how-num">2</span>
+          <h3>See what's public — and what isn't</h3>
+          <p>We show you active listings inside your radius right away, plus a count of off-market homes we track there that never made it to a public site.</p>
+        </div>
+        <div class="how-step">
+          <span class="how-num">3</span>
+          <h3>We go to work on your behalf</h3>
+          <p>Tell us your price range and pre-approval status, and we start matching you against new listings, pocket listings, and motivated sellers as they surface — not just what's already online.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LISTINGS -->
+  <section class="listings" id="listings">
+    <div class="wrap">
+      <div class="listings-head">
+        <h2>Inside your last search</h2>
+        <p>A preview of what a radius search turns up. Public listings show full details — off-market homes show just enough to know it's worth asking.</p>
+      </div>
+      <div class="listing-grid" id="listingGrid"><!-- populated by script.js --></div>
+    </div>
+  </section>
+
+  <!-- RADIUS / LEAD FORM -->
+  <section class="radius-form-section" id="radius-form">
+    <div class="wrap form-grid">
+      <div class="form-copy">
+        <p class="eyebrow">Set your home radius</p>
+        <h2>Tell us where and how, we'll handle the watching.</h2>
+        <p>Once your radius is set, you're not searching alone anymore — we're actively looking for you, including homes that never reach Zillow or the MLS.</p>
+        <ul class="form-points">
+          <li>Get notified the moment something in your radius matches</li>
+          <li>Access to off-market and pocket listings other buyers never see</li>
+          <li>A local agent's eyes on every disclosure before you make an offer</li>
+        </ul>
+      </div>
+
+      <form class="radius-form" id="radiusForm">
+        <div class="form-row">
+          <label for="fCity">Center of your search</label>
+          <input type="text" id="fCity" name="city" placeholder="City or neighborhood, e.g. Campbell" required>
+        </div>
+        <div class="form-row form-row-split">
+          <div>
+            <label for="fRadius">Radius</label>
+            <select id="fRadius" name="radius" required>
+              <option value="2">2 miles</option>
+              <option value="5" selected>5 miles</option>
+              <option value="10">10 miles</option>
+              <option value="15">15+ miles</option>
+            </select>
+          </div>
+          <div>
+            <label for="fBudget">Price range</label>
+            <select id="fBudget" name="budget" required>
+              <option value="under800">Under $800K</option>
+              <option value="800-1200" selected>$800K – $1.2M</option>
+              <option value="1200-1800">$1.2M – $1.8M</option>
+              <option value="1800plus">$1.8M+</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Where are you at with financing?</label>
+          <div class="radio-set">
+            <label><input type="radio" name="preapproval" value="preapproved" checked> Pre-approved</label>
+            <label><input type="radio" name="preapproval" value="working"> Working on it</label>
+            <label><input type="radio" name="preapproval" value="cash"> Buying with cash</label>
+            <label><input type="radio" name="preapproval" value="not-started"> Haven't started yet</label>
+          </div>
+        </div>
+        <div class="form-row form-row-split">
+          <div>
+            <label for="fName">Name</label>
+            <input type="text" id="fName" name="name" required>
+          </div>
+          <div>
+            <label for="fContact">Email or phone</label>
+            <input type="text" id="fContact" name="contact" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-wide">Set my radius</button>
+        <p class="form-note" id="formNote">No spam, no obligation — just homes that match.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- SERVICE AREA -->
+  <section class="service-area">
+    <div class="wrap">
+      <p class="eyebrow">Where we search</p>
+      <h2>Serving the entire San Francisco Bay Area</h2>
+      <p class="service-copy">From San Francisco to San Jose, Alameda to Contra Costa — public listings and off-market homes across San Mateo, Santa Clara, and everywhere between.</p>
+      <div class="county-chips">
+        <span>San Francisco</span><span>San Mateo</span><span>Santa Clara</span>
+        <span>Alameda</span><span>Contra Costa</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <span class="logo footer-logo">MyHomeRadius</span>
+      <p>San Jose, CA · <a href="tel:4156942374">415-694-2374</a></p>
+      <p class="footer-fine">Adan Mantilla · DRE #02088077 · Jason Mitchell Group. Equal Housing Opportunity.</p>
+    </div>
+    <p class="footer-copyright">© 2026 MyHomeRadius. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="listings.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
