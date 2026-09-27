@@ -273,6 +273,7 @@ input[type="text"]:focus, select:focus { border-color: var(--bay); }
 .radio-set input { accent-color: var(--bay); }
 .form-note { text-align: center; color: var(--sage); font-size: 0.88rem; margin: 1rem 0 0; }
 .form-note-success { color: var(--bay-deep); font-weight: 600; }
+.form-note-error { color: #8A5F26; font-weight: 600; }
 
 /* ===== Service area ===== */
 .service-area { padding: 4.5rem 0 5.5rem; text-align: center; }
