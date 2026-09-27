@@ -1,12 +1,14 @@
+const API_BASE = "https://myhomeradius-api-production.up.railway.app";
+
 document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- MAP ---------- */
   const DEFAULT_CENTER = [37.4, -121.98]; // roughly Santa Clara County
   const map = L.map("map", { zoomControl: true, scrollWheelZoom: false }).setView(DEFAULT_CENTER, 9);
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-    maxZoom: 18,
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19,
   }).addTo(map);
 
   const radiusInput = document.getElementById("radiusRange");
@@ -21,13 +23,27 @@ document.addEventListener("DOMContentLoaded", () => {
     return mi * 1609.34;
   }
 
-  function renderListingsWithin(center, radiusMi) {
+  async function fetchListings(center, radiusMi) {
+    if (!center) return LISTINGS; // initial unfiltered preview, no API call needed
+
+    try {
+      const url = `${API_BASE}/api/listings?lat=${center.lat}&lng=${center.lng}&radius=${radiusMi}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
+      const data = await res.json();
+      return data.listings;
+    } catch (err) {
+      console.warn("Live listings unavailable, showing preview data instead:", err.message);
+      // Graceful fallback so the map never looks broken to a visitor
+      return LISTINGS.filter(l => distanceMiles(center.lat, center.lng, l.lat, l.lng) <= radiusMi);
+    }
+  }
+
+  async function renderListingsWithin(center, radiusMi) {
     listingMarkers.forEach(m => map.removeLayer(m));
     listingMarkers = [];
 
-    const within = center
-      ? LISTINGS.filter(l => distanceMiles(center.lat, center.lng, l.lat, l.lng) <= radiusMi)
-      : LISTINGS;
+    const within = await fetchListings(center, radiusMi);
 
     within.forEach(listing => {
       const color = listing.status === "onmarket" ? "#235D72" : "#C68A3B";
@@ -134,17 +150,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("radiusForm");
   const formNote = document.getElementById("formNote");
 
-  form.addEventListener("submit", e => {
+  form.addEventListener("submit", async e => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
 
-    // Phase 1: no backend wired yet. Phase 2 replaces this block with a
-    // POST to the Railway endpoint, which creates/updates the lead in
-    // Follow Up Boss and tags it for the wholesale-match + DealMachine flow.
-    console.log("Radius form submission (not yet sent anywhere):", data);
+    const submitBtn = form.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Setting your radius…";
 
-    form.style.display = "none";
-    formNote.textContent = "Got it — we're watching your radius now. We'll reach out as soon as something matches.";
-    formNote.classList.add("form-note-success");
+    try {
+      const res = await fetch(`${API_BASE}/api/lead`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
+
+      form.style.display = "none";
+      formNote.textContent = "Got it — we're watching your radius now. We'll reach out as soon as something matches.";
+      formNote.classList.add("form-note-success");
+    } catch (err) {
+      console.error("Lead submission failed:", err.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Set my radius";
+      formNote.textContent = "Something went wrong sending that — please try again, or call/text (415) 694-2374 directly.";
+      formNote.classList.add("form-note-error");
+    }
   });
 });
