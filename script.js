@@ -19,15 +19,26 @@ const AUTO_REPLY =
   "3) Then we start sending you off-market homes inside your radius as they come up. " +
   "Questions before then? Call or text 415-770-0722. MyHomeRadius, powered by Believe The Process Ventures LLC.";
 
+// Lead email rows, in the order we want to read them. FormSubmit needs the
+// buyer's address under the key "email" to send the auto-reply.
+const ROWS = [
+  ["Name", "name"], ["Phone", "phone"], ["email", "email"],
+  ["Area", "city"], ["Radius (miles)", "radius"],
+  ["Price range", "budget"], ["Timeline", "timeline"], ["Financing", "preapproval"],
+  ["Beds (min)", "beds"], ["Baths (min)", "baths"], ["Home type", "homeType"],
+  ["Open to a home that needs work", "fixer"], ["Needs to sell first", "sellFirst"],
+  ["Has an agent", "hasAgent"], ["Notes", "notes"],
+];
+
 function buildSubmission(raw) {
+  const label = k => (LABELS[k] && LABELS[k][raw[k]]) || raw[k] || "";
   const d = {};
-  Object.keys(raw).forEach(k => { d[k] = LABELS[k] && LABELS[k][raw[k]] ? LABELS[k][raw[k]] : raw[k]; });
-  d.smsTransactional = raw.smsTransactional === "yes" ? "Yes" : "No";
-  d.smsMarketing = raw.smsMarketing === "yes" ? "Yes" : "No";
-  if (raw.lat) d.map = `https://www.google.com/maps?q=${raw.lat},${raw.lng}`;
+  ROWS.forEach(([title, k]) => { d[title] = label(k); });
+  d["Map pin"] = raw.lat ? `https://www.google.com/maps?q=${raw.lat},${raw.lng}` : "No pin dropped";
+  d["Text opt-in (info)"] = raw.smsTransactional === "yes" ? "Yes" : "No";
+  d["Text opt-in (marketing)"] = raw.smsMarketing === "yes" ? "Yes" : "No";
   d._honey = raw.website || "";
-  delete d.website;
-  d._subject = `New MyHomeRadius lead: ${d.name}, ${d.city}, ${d.budget || ""}, ${d.timeline || ""}`;
+  d._subject = `New MyHomeRadius lead: ${raw.name}, ${raw.city}, ${label("budget")}, ${label("timeline")}`;
   d._template = "table";
   d._autoresponse = AUTO_REPLY;
   return d;
