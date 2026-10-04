@@ -1,4 +1,37 @@
-const API_BASE = "https://myhomeradius-api-production.up.railway.app";
+// FormSubmit emails each lead to us and sends the buyer an auto-reply.
+// Swap the address for FormSubmit's private alias once it's activated.
+const LEADS_URL = "https://formsubmit.co/ajax/adanmantilla@JasonMitchellgroup.com";
+
+const LABELS = {
+  budget: { under800: "Under $800K", "800-1200": "$800K to $1.2M", "1200-1800": "$1.2M to $1.8M", "1800plus": "$1.8M+" },
+  timeline: { "0-3": "Next 3 months", "3-6": "3 to 6 months", "6-12": "6 to 12 months", looking: "Just looking" },
+  homeType: { any: "Anything", house: "House", condo: "Condo or townhome", multi: "2 to 4 units" },
+  preapproval: { preapproved: "Pre-approved", working: "Working on it", cash: "Cash", "not-started": "Not started" },
+  fixer: { yes: "Yes", maybe: "Maybe, light work", no: "No, move-in ready" },
+  sellFirst: { yes: "Yes", no: "No", rent: "Rents" },
+  hasAgent: { yes: "Yes", no: "No" },
+};
+
+const AUTO_REPLY =
+  "Thanks for setting your radius. Here's what happens next: " +
+  "1) MyHomeRadius will reach out to you within the next 48 hours. " +
+  "2) We'll go over what you're looking for and your timing. " +
+  "3) Then we start sending you off-market homes inside your radius as they come up. " +
+  "Questions before then? Call or text 415-770-0722. MyHomeRadius, powered by Believe The Process Ventures LLC.";
+
+function buildSubmission(raw) {
+  const d = {};
+  Object.keys(raw).forEach(k => { d[k] = LABELS[k] && LABELS[k][raw[k]] ? LABELS[k][raw[k]] : raw[k]; });
+  d.smsTransactional = raw.smsTransactional === "yes" ? "Yes" : "No";
+  d.smsMarketing = raw.smsMarketing === "yes" ? "Yes" : "No";
+  if (raw.lat) d.map = `https://www.google.com/maps?q=${raw.lat},${raw.lng}`;
+  d._honey = raw.website || "";
+  delete d.website;
+  d._subject = `New MyHomeRadius lead: ${d.name}, ${d.city}, ${d.budget || ""}, ${d.timeline || ""}`;
+  d._template = "table";
+  d._autoresponse = AUTO_REPLY;
+  return d;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -13,138 +46,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const radiusInput = document.getElementById("radiusRange");
   const radiusValueLabel = document.getElementById("radiusValue");
+  const mapHint = document.getElementById("mapHint");
+  const radiusSummary = document.getElementById("radiusSummary");
+  const fLat = document.getElementById("fLat");
+  const fLng = document.getElementById("fLng");
+  const fRadius = document.getElementById("fRadius");
 
   let centerPoint = null;
   let radiusCircle = null;
   let centerMarker = null;
-  let listingMarkers = [];
 
   function milesToMeters(mi) {
     return mi * 1609.34;
   }
 
-  async function fetchListings(center, radiusMi) {
-    if (!center) return LISTINGS; // initial unfiltered preview, no API call needed
-
-    try {
-      const url = `${API_BASE}/api/listings?lat=${center.lat}&lng=${center.lng}&radius=${radiusMi}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`API returned ${res.status}`);
-      const data = await res.json();
-      return data.listings;
-    } catch (err) {
-      console.warn("Live listings unavailable, showing preview data instead:", err.message);
-      // Graceful fallback so the map never looks broken to a visitor
-      return LISTINGS.filter(l => distanceMiles(center.lat, center.lng, l.lat, l.lng) <= radiusMi);
-    }
+  // Keep the form in sync with whatever the visitor set on the map
+  function syncForm() {
+    const mi = Number(radiusInput.value);
+    fRadius.value = mi;
+    if (!centerPoint) return;
+    fLat.value = centerPoint.lat.toFixed(5);
+    fLng.value = centerPoint.lng.toFixed(5);
+    radiusSummary.innerHTML = `Your radius: <strong>${mi} miles</strong> around the pin you dropped. <a href="#map-card">Change it</a>`;
+    mapHint.innerHTML = `Radius set. <a href="#radius-form">Tell us what you're looking for →</a>`;
   }
 
-  async function renderListingsWithin(center, radiusMi) {
-    listingMarkers.forEach(m => map.removeLayer(m));
-    listingMarkers = [];
-
-    const within = await fetchListings(center, radiusMi);
-
-    within.forEach(listing => {
-      const color = listing.status === "onmarket" ? "#235D72" : "#C68A3B";
-      const marker = L.circleMarker([listing.lat, listing.lng], {
-        radius: 7,
-        color: "#EEF0E7",
-        weight: 2,
-        fillColor: color,
-        fillOpacity: 1,
-      }).addTo(map);
-      marker.bindPopup(popupHtml(listing));
-      listingMarkers.push(marker);
-    });
-
-    renderListingGrid(within);
-  }
-
-  function popupHtml(listing) {
-    if (listing.status === "onmarket") {
-      return `<strong>$${listing.price.toLocaleString()}</strong><br>
-        ${listing.beds} bd · ${listing.baths} ba · ${listing.sqft.toLocaleString()} sqft<br>
-        ${listing.address}`;
-    }
-    return `<strong>Off-market</strong><br>${listing.address}<br>
-      <a href="#radius-form">Request details →</a>`;
-  }
-
-  function setCenter(latlng) {
-    centerPoint = latlng;
-    const radiusMi = Number(radiusInput.value);
-
-    if (centerMarker) map.removeLayer(centerMarker);
+  function drawCircle() {
     if (radiusCircle) map.removeLayer(radiusCircle);
-
-    centerMarker = L.marker(latlng).addTo(map);
-    radiusCircle = L.circle(latlng, {
-      radius: milesToMeters(radiusMi),
+    radiusCircle = L.circle(centerPoint, {
+      radius: milesToMeters(Number(radiusInput.value)),
       color: "#235D72",
       weight: 1.5,
       fillColor: "#235D72",
       fillOpacity: 0.07,
     }).addTo(map);
-
     map.fitBounds(radiusCircle.getBounds(), { padding: [24, 24] });
-    renderListingsWithin(latlng, radiusMi);
+  }
+
+  function setCenter(latlng) {
+    centerPoint = latlng;
+    if (centerMarker) map.removeLayer(centerMarker);
+    centerMarker = L.marker(latlng).addTo(map);
+    drawCircle();
+    syncForm();
   }
 
   map.on("click", e => setCenter(e.latlng));
 
   radiusInput.addEventListener("input", () => {
-    const mi = Number(radiusInput.value);
-    radiusValueLabel.textContent = `${mi} mi`;
-    if (centerPoint) {
-      if (radiusCircle) map.removeLayer(radiusCircle);
-      radiusCircle = L.circle(centerPoint, {
-        radius: milesToMeters(mi),
-        color: "#235D72",
-        weight: 1.5,
-        fillColor: "#235D72",
-        fillOpacity: 0.07,
-      }).addTo(map);
-      map.fitBounds(radiusCircle.getBounds(), { padding: [24, 24] });
-      renderListingsWithin(centerPoint, mi);
-    }
+    radiusValueLabel.textContent = `${radiusInput.value} mi`;
+    if (centerPoint) drawCircle();
+    syncForm();
   });
 
-  // Initial state: show everything, unfiltered, so the page isn't empty on load
-  renderListingsWithin(null, null);
-
-  /* ---------- LISTING CARDS ---------- */
-  function renderListingGrid(listings) {
-    const grid = document.getElementById("listingGrid");
-    grid.innerHTML = "";
-
-    if (listings.length === 0) {
-      grid.innerHTML = `<p class="listing-empty">Nothing in that radius yet — widen it, or set your radius below and we'll keep watching for you.</p>`;
-      return;
-    }
-
-    listings.slice(0, 6).forEach(listing => {
-      const card = document.createElement("div");
-      card.className = "listing-card";
-      if (listing.status === "onmarket") {
-        card.innerHTML = `
-          <span class="listing-badge badge-on">For sale</span>
-          <div class="listing-price">$${listing.price.toLocaleString()}</div>
-          <div class="listing-meta">${listing.beds} bd · ${listing.baths} ba · ${listing.sqft.toLocaleString()} sqft</div>
-          <div class="listing-address">${listing.address}</div>
-        `;
-      } else {
-        card.innerHTML = `
-          <span class="listing-badge badge-off">Off-market</span>
-          <div class="listing-price listing-price-hidden">Price on request</div>
-          <div class="listing-meta">${listing.beds} bd · ${listing.baths} ba</div>
-          <div class="listing-address">${listing.address}</div>
-          <a href="#radius-form" class="listing-cta">Request info →</a>
-        `;
-      }
-      grid.appendChild(card);
-    });
-  }
+  // Phase 2: live for-sale listings inside the radius plug in here once a
+  // listings feed is chosen (Repliers was ruled out on cost).
 
   /* ---------- FORM ---------- */
   const form = document.getElementById("radiusForm");
@@ -159,21 +115,22 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.textContent = "Setting your radius…";
 
     try {
-      const res = await fetch(`${API_BASE}/api/lead`, {
+      const res = await fetch(LEADS_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(buildSubmission(data)),
       });
-      if (!res.ok) throw new Error(`API returned ${res.status}`);
+      const out = await res.json();
+      if (String(out.success) !== "true") throw new Error(out.message || "not sent");
 
       form.style.display = "none";
-      formNote.textContent = "Got it — we're watching your radius now. We'll reach out as soon as something matches.";
+      formNote.textContent = "Got it. Check your email for next steps. We'll reach out within 48 hours.";
       formNote.classList.add("form-note-success");
     } catch (err) {
       console.error("Lead submission failed:", err.message);
       submitBtn.disabled = false;
       submitBtn.textContent = "Set my radius";
-      formNote.textContent = "Something went wrong sending that — please try again, or call/text (415) 694-2374 directly.";
+      formNote.textContent = "Something went wrong sending that. Please try again, or call/text (415) 770-0722.";
       formNote.classList.add("form-note-error");
     }
   });

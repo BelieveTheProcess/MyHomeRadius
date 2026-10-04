@@ -172,14 +172,6 @@ p { max-width: 62ch; }
 #radiusValue { font-family: var(--font-display); font-weight: 600; min-width: 3.4em; text-align: right; }
 .map-hint { margin: 0.5em 0 0; font-size: 0.85rem; color: var(--sage); }
 #map { height: 380px; width: 100%; }
-.map-legend {
-  display: flex;
-  gap: 1.4rem;
-  padding: 12px 20px;
-  border-top: 1px solid var(--line);
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
 .dot-onmarket { background: var(--bay); }
 .dot-offmarket { background: var(--gold); }
@@ -257,7 +249,7 @@ p { max-width: 62ch; }
 .form-row { margin-bottom: 1.3rem; }
 .form-row label { display: block; font-size: 0.88rem; color: var(--ink-soft); margin-bottom: 0.4em; }
 .form-row-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-input[type="text"], select {
+input[type="text"], input[type="email"], input[type="tel"], textarea, select {
   width: 100%;
   padding: 0.75em 0.9em;
   border: 1px solid var(--line);
@@ -267,7 +259,7 @@ input[type="text"], select {
   font-size: 0.98rem;
   color: var(--ink);
 }
-input[type="text"]:focus, select:focus { border-color: var(--bay); }
+input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, textarea:focus, select:focus { border-color: var(--bay); }
 .radio-set { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; }
 .radio-set label { display: flex; align-items: center; gap: 0.5em; font-size: 0.92rem; color: var(--ink); margin: 0; }
 .radio-set input { accent-color: var(--bay); }
@@ -309,3 +301,12 @@ input[type="text"]:focus, select:focus { border-color: var(--bay); }
   .header-nav a:not(.btn) { display: none; }
   #map { height: 300px; }
 }
+
+/* Prescreen form additions */
+textarea { resize: vertical; }
+.radius-summary { font-size: 0.9rem; color: var(--ink-soft); background: var(--paper-lift); border: 1px solid var(--line); border-radius: 8px; padding: 0.7em 0.9em; margin: 0 0 1.3rem; }
+.radius-summary a { color: var(--bay); font-weight: 600; }
+.radius-summary strong { color: var(--bay-deep); }
+.consent label { display: flex; gap: 0.6em; align-items: flex-start; font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft); margin-bottom: 0.7em; }
+.consent input { margin-top: 0.2em; accent-color: var(--bay); flex-shrink: 0; }
+.consent-fine { font-size: 0.78rem; color: var(--sage); margin: 0; }
