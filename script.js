@@ -15,7 +15,7 @@ const LABELS = {
 const AUTO_REPLY =
   "Thank you for setting your radius. One of our real estate specialists will reach out within 48 hours " +
   "to confirm your information and walk you through the next steps to acquiring an off-market opportunity. " +
-  "Questions before then? Call or text 415-770-0722. MyHomeRadius, powered by Believe The Process Ventures LLC.";
+  "Questions before then? Call or text 415-770-0722 or email support@myhomeradius.com. MyHomeRadius, powered by Believe The Process Ventures LLC.";
 
 // Lead email rows, in the order we want to read them. FormSubmit needs the
 // buyer's address under the key "email" to send the auto-reply.
