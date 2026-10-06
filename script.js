@@ -1,6 +1,6 @@
 // FormSubmit emails each lead to us and sends the buyer an auto-reply.
 // Swap the address for FormSubmit's private alias once it's activated.
-const LEADS_URL = "https://formsubmit.co/ajax/adanmantilla@JasonMitchellgroup.com";
+const LEADS_URL = "https://formsubmit.co/ajax/support@myhomeradius.com";
 
 const LABELS = {
   budget: { under800: "Under $800K", "800-1200": "$800K to $1.2M", "1200-1800": "$1.2M to $1.8M", "1800plus": "$1.8M+" },
