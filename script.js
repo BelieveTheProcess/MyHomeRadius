@@ -13,10 +13,8 @@ const LABELS = {
 };
 
 const AUTO_REPLY =
-  "Thanks for setting your radius. Here's what happens next: " +
-  "1) MyHomeRadius will reach out to you within the next 48 hours. " +
-  "2) We'll go over what you're looking for and your timing. " +
-  "3) Then we start sending you off-market homes inside your radius as they come up. " +
+  "Thank you for setting your radius. One of our real estate specialists will reach out within 48 hours " +
+  "to confirm your information and walk you through the next steps to acquiring an off-market opportunity. " +
   "Questions before then? Call or text 415-770-0722. MyHomeRadius, powered by Believe The Process Ventures LLC.";
 
 // Lead email rows, in the order we want to read them. FormSubmit needs the
