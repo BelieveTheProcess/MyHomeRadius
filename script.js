@@ -135,8 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (String(out.success) !== "true") throw new Error(out.message || "not sent");
 
       form.style.display = "none";
-      formNote.textContent = "Got it. Check your email for next steps. We'll reach out within 48 hours.";
-      formNote.classList.add("form-note-success");
+      const thanks = document.getElementById("thanks");
+      thanks.hidden = false;
+      thanks.scrollIntoView({ behavior: "smooth", block: "center" });
+      thanks.focus({ preventScroll: true });
     } catch (err) {
       console.error("Lead submission failed:", err.message);
       submitBtn.disabled = false;

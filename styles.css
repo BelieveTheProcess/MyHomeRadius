@@ -310,3 +310,10 @@ textarea { resize: vertical; }
 .consent label { display: flex; gap: 0.6em; align-items: flex-start; font-size: 0.8rem; line-height: 1.45; color: var(--ink-soft); margin-bottom: 0.7em; }
 .consent input { margin-top: 0.2em; accent-color: var(--bay); flex-shrink: 0; }
 .consent-fine { font-size: 0.78rem; color: var(--sage); margin: 0; }
+
+/* ===== Thank-you panel ===== */
+.thanks { background: var(--paper-lift); border: 1px solid var(--line); border-radius: 6px; padding: 2rem; outline: none; }
+.thanks[hidden] { display: none; }
+.thanks-steps { padding-left: 1.2em; color: var(--ink-soft); }
+.thanks-steps li { margin-bottom: 0.5em; }
+.thanks p { color: var(--ink-soft); }
